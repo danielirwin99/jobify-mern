@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import logo from "../assets/images/logo.svg";
 import main from "../assets/images/main.svg";
 import LandingPage from "../assets/wrappers/LandingPage";
 import { Logo } from "../components";
