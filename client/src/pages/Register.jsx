@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Wrapper from "../assets/wrappers/RegisterPage";
 import { Logo, FormRow, Alert } from "../components";
+import { useAppContext } from "../context/appContext";
 
 // Initial State of the forms
 const initialState = {
@@ -8,14 +9,15 @@ const initialState = {
   email: "",
   password: "",
   isMember: true,
-  showAlert: false,
 };
 
 const Register = () => {
-  const [showAlert, setShowAlert] = useState(false);
   const [values, setValues] = useState(initialState);
 
   // Global State and useNavigate
+  // Importing it from appContext.js and make it equal to a state --> Should be the intialState as Default
+  // We are controlling these from our GLOBAL context rather than LOCAL context
+  const { isLoading, showAlert, displayAlert } = useAppContext();
 
   // Function handles toggling between registering and logging in
   const toggleMember = () => {
@@ -25,12 +27,20 @@ const Register = () => {
   };
 
   const handleChange = (e) => {
-    console.log(e.target);
+    // Looping over all the values --> Then making event.target.name equal to what we enter inside the form
+    setValues({ ...values, [e.target.name]: e.target.value });
   };
 
   const onSubmit = (e) => {
     e.preventDefault();
-    console.log(e.target);
+    // Looking for these avalues
+    const { name, email, password, isMember } = values;
+    // If these values are not present display the alert and return it (stop the fucntionality)
+    if (!email || !password || (!isMember && !name)) {
+      displayAlert();
+      return;
+    }
+    console.log(values);
   };
 
   return (
@@ -39,7 +49,7 @@ const Register = () => {
         <Logo />
         <h3>{values.isMember ? "Login" : "Register"}</h3>
         {/* Display the Alert if boolean = true */}
-        {values.showAlert && <Alert />}
+        {showAlert && <Alert />}
         {/* Name Input */}
         {/* If isMember is false --> Show the name input */}
         {!values.isMember && (
