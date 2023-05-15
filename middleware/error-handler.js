@@ -1,11 +1,14 @@
 import { StatusCodes } from "http-status-codes";
 
 const errorHandlerMiddleware = (err, req, res, next) => {
-  console.log(err);
+  console.log(err.message);
   const defaultError = {
-    statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
-    msg: "Something went wrong, try again later",
+    // If the statusCode is present, use that ONE --> If not, use the GENERIC one
+    statusCode: err.statusCode || StatusCodes.INTERNAL_SERVER_ERROR,
+    // If there is a specific error then display that --> Otherwise show generic response
+    msg: err.message || "Something went wrong, try again later",
   };
+
   // If our error response includes this
   if (err.name === "ValidationError") {
     // Displays the BAD_REQUEST error code
@@ -16,15 +19,19 @@ const errorHandlerMiddleware = (err, req, res, next) => {
     defaultError.msg = Object.values(err.errors)
       .map((item) => item.message)
       .join(",");
+  }
 
-  } 
-  if(err.code && err.code === 11000) {
+  // 11000 Code = Unique email entered in again
+  if (err.code && err.code === 11000) {
     // Setup the status error code
     defaultError.statusCode = StatusCodes.BAD_REQUEST;
-    defaultError.msg = `${Object.keys} field has to be unique`
+    // This stops new information being registered with the same email
+    // Targets the keyValue object --> The email
+    defaultError.msg = `${Object.keys(err.keyValue)} field has to be unique`;
   }
 
   res.status(defaultError.statusCode).json({ msg: defaultError.msg });
+
 };
 
 export default errorHandlerMiddleware;
