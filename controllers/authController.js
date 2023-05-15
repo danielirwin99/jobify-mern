@@ -17,10 +17,13 @@ const register = async (req, res) => {
   if (userAlreadyExists) {
     throw new BadRequestError("Email is already in use");
   }
-  
+
   const user = await User.create({ name, email, password });
+  // Invokes our token from JWT
+  const token = user.createJWT()
+
   // Imported from our http-status-codes library package
-  res.status(StatusCodes.OK).json({ user });
+  res.status(StatusCodes.OK).json({ user, token });
 };
 
 const login = async (req, res) => {

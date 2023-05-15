@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 import validator from "validator";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 const UserSchema = new mongoose.Schema({
   name: {
@@ -39,5 +41,19 @@ const UserSchema = new mongoose.Schema({
     default: "My City",
   },
 });
+
+// .pre --> Before
+// Our Hashed password functionality
+UserSchema.pre("save", async function () {
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+});
+
+// Our JWT functionality
+UserSchema.methods.createJWT = function () {
+  return jwt.sign({ userId: this._id }, "jwtSecret", {
+    expiresIn: "30d",
+  });
+};
 
 export default mongoose.model("User", UserSchema);
