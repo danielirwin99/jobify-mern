@@ -2,7 +2,8 @@ import express from "express";
 const app = express();
 import dotenv from "dotenv";
 dotenv.config();
-import "express-async-errors"
+import "express-async-errors";
+import morgan from "morgan";
 
 // Connects us to the mongoDB and authenticateUser
 import connectDB from "./db/connect.js";
@@ -15,13 +16,21 @@ import jobRouter from "./routes/jobsRoutes.js";
 import notFoundMiddleware from "./middleware/not-found.js";
 import errorHandlerMiddleware from "./middleware/error-handler.js";
 
+if (process.env.NODE_ENV !== "production") {
+  app.use(morgan("dev"));
+}
+
 // Lets us pass through json data with this Express Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Home Route
-app.get("/", (req, res) => {
-  res.send("Welcome");
+// app.get("/", (req, res) => {
+//   res.json({ msg: "Welcome!" });
+// });
+
+app.get("/api/v1", (req, res) => {
+  res.json({ msg: "API!" });
 });
 
 // Our Auth Router

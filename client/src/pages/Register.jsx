@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Wrapper from "../assets/wrappers/RegisterPage";
 import { Logo, FormRow, Alert } from "../components";
 import { useAppContext } from "../context/appContext";
+import { useNavigate } from "react-router-dom";
 
 // Initial State of the forms
 const initialState = {
@@ -13,11 +14,13 @@ const initialState = {
 
 const Register = () => {
   const [values, setValues] = useState(initialState);
+  const navigate = useNavigate();
 
   // Global State and useNavigate
   // Importing it from appContext.js and make it equal to a state --> Should be the intialState as Default
   // We are controlling these from our GLOBAL context rather than LOCAL context
-  const { isLoading, showAlert, displayAlert } = useAppContext();
+  const { user, isLoading, showAlert, displayAlert, registerUser, loginUser } =
+    useAppContext();
 
   // Function handles toggling between registering and logging in
   const toggleMember = () => {
@@ -33,15 +36,38 @@ const Register = () => {
 
   const onSubmit = (e) => {
     e.preventDefault();
-    // Looking for these avalues
+    // Looking for these values
     const { name, email, password, isMember } = values;
-    // If these values are not present display the alert and return it (stop the fucntionality)
+
+    // If these values are not present display the alert and return it (stop the functionality)
     if (!email || !password || (!isMember && !name)) {
       displayAlert();
       return;
     }
-    console.log(values);
+
+    // Grabs these three values to use below
+    const currentUser = { name, email, password };
+
+    // If they are a member already --> Fire this function from useAppContext()
+    if (isMember) {
+      loginUser(currentUser);
+
+      // If they are a new user registering --> It will fire the function from appContext
+      // with the values from above
+    } else {
+      registerUser(currentUser);
+    }
+
   };
+
+  useEffect(() => {
+    setTimeout(() => {
+      // If there is a successful user that registered --> Redirect to the dashboard after 3 seconds
+      if (user) {
+        navigate("/");
+      }
+    }, 3000);
+  }, [user, navigate]);
 
   return (
     <Wrapper className="full-page">
@@ -75,8 +101,8 @@ const Register = () => {
           value={values.password}
           handleChange={handleChange}
         />
-
-        <button type="submit" className="btn btn-block">
+        {/* Disables the button functionality when its loading */}
+        <button type="submit" className="btn btn-block" disabled={isLoading}>
           Submit
         </button>
         <p>

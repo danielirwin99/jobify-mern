@@ -51,9 +51,17 @@ UserSchema.pre("save", async function () {
 
 // Our JWT functionality
 UserSchema.methods.createJWT = function () {
-  return jwt.sign({ userId: this._id }, "jwtSecret", {
-    expiresIn: "30d",
+  return jwt.sign({ userId: this._id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_LIFETIME,
   });
+};
+
+// Compares this two passwords through the bcrypt .compare function
+// .comparePassword --> Can be any name you want
+// candidatePassword --> The original one, this.password --> the one you just entered (confirmation)
+UserSchema.methods.comparePassword = async function (candidatePassword) {
+  const isMatching = await bcrypt.compare(candidatePassword, this.password);
+  return isMatching;
 };
 
 export default mongoose.model("User", UserSchema);

@@ -1,11 +1,25 @@
 import React, { useReducer } from "react";
 import { useContext } from "react";
+import axios from "axios";
 
 import reducer from "./reducer";
 
-import { CLEAR_ALERT, DISPLAY_ALERT } from "./actions";
+import {
+  CLEAR_ALERT,
+  DISPLAY_ALERT,
+  REGISTER_USER_BEGIN,
+  REGISTER_USER_ERROR,
+  REGISTER_USER_SUCCESS,
+  LOGIN_USER_BEGIN,
+  LOGIN_USER_SUCCESS,
+  LOGIN_USER_ERROR,
+} from "./actions";
 
-// The initial states of each
+const token = localStorage.getItem("token");
+const user = localStorage.getItem("user");
+const userLocation = localStorage.getItem("location");
+
+// The initial states of each / Default values
 const initialState = {
   isLoading: false,
   showAlert: false,
@@ -13,6 +27,10 @@ const initialState = {
   alertText: "",
   //   Which alert will show up
   alertType: "",
+  user: user ? JSON.parse(user) : null,
+  token: token,
+  userLocation: userLocation || "",
+  jobLocation: userLocation || "",
 };
 
 const AppContext = React.createContext();
@@ -22,6 +40,20 @@ const AppProvider = ({ children }) => {
   // Pass in our reducer function from reducer.js and our initialState
   // Our State set to default
   const [state, dispatch] = useReducer(reducer, initialState);
+
+  // Adds the three variables into local storage
+  const addUserToLocalStorage = ({ user, token, location }) => {
+    localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem("token", token);
+    localStorage.setItem("location", location);
+  };
+
+  // Removes the variables from local storage
+  const removeUserFromLocalStorage = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("location");
+  };
 
   //   Dispatches the alert function
   const displayAlert = () => {
@@ -39,12 +71,78 @@ const AppProvider = ({ children }) => {
     }, 3000);
   };
 
-  //  Returning our spreaded out (iteration over all) initialState to the whole application
+  // Our function to register
+  const registerUser = async (currentUser) => {
+    // Dispatch this action straight away
+    dispatch({ type: REGISTER_USER_BEGIN });
+    try {
+      // Post the response to the backend with currentUser credentials that they filled in
+      const response = await axios.post("/api/v1/auth/register", currentUser);
+      console.log(response);
+      // We want back the three credentials
+      const { user, token, location } = response.data;
+      // After we got all three --> dispatch that it was successful with the payloads
+      dispatch({
+        type: REGISTER_USER_SUCCESS,
+        payload: {
+          user,
+          token,
+          location,
+        },
+      });
+      addUserToLocalStorage({ user, token, location });
+    } catch (error) {
+      console.log(error.response);
+      dispatch({
+        type: REGISTER_USER_ERROR,
+        payload: { msg: error.response.data.msg },
+      });
+    }
+    // Clear the alert after three seconds (see above)
+    clearAlert();
+  };
+
+  // Login in user functionality
+  // ---- Its basically the same as registerUser but we change the API path and the actions
+  const loginUser = async (currentUser) => {
+    dispatch({ type: LOGIN_USER_BEGIN });
+    try {
+      // We are looking for the data that the response gave in registerUser
+      const { data } = await axios.post("/api/v1/auth/login", currentUser);
+
+      // We want back the three credentials
+      const { user, token, location } = data;
+      // After we got all three --> dispatch that it was successful with the payloads
+      dispatch({
+        type: LOGIN_USER_SUCCESS,
+        payload: {
+          user,
+          token,
+          location,
+        },
+      })
+      // Adds it to the storage to save it on page refresh
+      addUserToLocalStorage({ user, token, location });
+      
+    } catch (error) {
+      dispatch({
+        type: LOGIN_USER_ERROR,
+        payload: { msg: error.response.data.msg },
+      });
+    }
+    // Clear the alert after three seconds (see above)
+    clearAlert();
+  };
+
+  //  Returning our spread out (iteration over all) initialState to the whole application
+  //  This lets us use these across the whole project on the frontend
   return (
     <AppContext.Provider
       value={{
         ...state,
         displayAlert,
+        registerUser,
+        loginUser,
       }}
     >
       {/* This is our application --> This is what we are rendering */}
@@ -53,7 +151,7 @@ const AppProvider = ({ children }) => {
   );
 };
 
-// This is our hook so we can dont have to keep importing other parts of this whole component
+// This is our hook so we can don't have to keep importing other parts of this whole component
 const useAppContext = () => {
   return useContext(AppContext);
 };
