@@ -57,7 +57,6 @@ const Register = () => {
     } else {
       registerUser(currentUser);
     }
-
   };
 
   useEffect(() => {

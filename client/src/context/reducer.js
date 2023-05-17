@@ -7,7 +7,12 @@ import {
   LOGIN_USER_BEGIN,
   LOGIN_USER_SUCCESS,
   LOGIN_USER_ERROR,
+  TOGGLE_SIDEBAR,
+  LOGOUT_USER,
 } from "./actions";
+
+// Pulling this through for the logout functionality
+import { initialState } from "./appContext";
 
 const reducer = (state, action) => {
   // If this action is fired --> Spread over the values and display them
@@ -77,7 +82,7 @@ const reducer = (state, action) => {
       jobLocation: action.payload.jobLocation,
       showAlert: true,
       alertType: "success",
-      alertText: "User Created! Redirecting...",
+      alertText: "Login Successful!! Redirecting...",
     };
   }
 
@@ -92,6 +97,27 @@ const reducer = (state, action) => {
     };
   }
 
+  // If we click the sidebar
+  if (action.type === TOGGLE_SIDEBAR) {
+    return {
+      ...state,
+      isLoading: false,
+      // We are showing whatever is the opposite of the current value
+      showSidebar: !state.showSidebar,
+    };
+  }
+
+  // If we click the logout button
+  if (action.type === LOGOUT_USER) {
+    return {
+      // The default values from appContext.js INSTEAD of ...state
+      ...initialState,
+      // These three values override the localStorage data before it updates and returns it to these
+      user: null,
+      userLocation: "",
+      jobLocation: "",
+    };
+  }
 
   throw new Error(`No such action : ${action.type}`);
 };

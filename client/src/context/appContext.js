@@ -13,6 +13,8 @@ import {
   LOGIN_USER_BEGIN,
   LOGIN_USER_SUCCESS,
   LOGIN_USER_ERROR,
+  TOGGLE_SIDEBAR,
+  LOGOUT_USER,
 } from "./actions";
 
 const token = localStorage.getItem("token");
@@ -31,6 +33,7 @@ const initialState = {
   token: token,
   userLocation: userLocation || "",
   jobLocation: userLocation || "",
+  showSidebar: false,
 };
 
 const AppContext = React.createContext();
@@ -120,10 +123,9 @@ const AppProvider = ({ children }) => {
           token,
           location,
         },
-      })
+      });
       // Adds it to the storage to save it on page refresh
       addUserToLocalStorage({ user, token, location });
-      
     } catch (error) {
       dispatch({
         type: LOGIN_USER_ERROR,
@@ -132,6 +134,17 @@ const AppProvider = ({ children }) => {
     }
     // Clear the alert after three seconds (see above)
     clearAlert();
+  };
+
+  // Function for toggling the sidebar in and out
+  const toggleSidebar = () => {
+    dispatch({ type: TOGGLE_SIDEBAR });
+  };
+
+  // Fires this action when they hit logout
+  const logoutUser = () => {
+    dispatch({ type: LOGOUT_USER });
+    removeUserFromLocalStorage()
   };
 
   //  Returning our spread out (iteration over all) initialState to the whole application
@@ -143,6 +156,8 @@ const AppProvider = ({ children }) => {
         displayAlert,
         registerUser,
         loginUser,
+        toggleSidebar,
+        logoutUser,
       }}
     >
       {/* This is our application --> This is what we are rendering */}
