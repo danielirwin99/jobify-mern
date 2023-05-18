@@ -15,6 +15,9 @@ import {
   LOGIN_USER_ERROR,
   TOGGLE_SIDEBAR,
   LOGOUT_USER,
+  UPDATE_USER_BEGIN,
+  UPDATE_USER_SUCCESS,
+  UPDATE_USER_ERROR,
 } from "./actions";
 
 const token = localStorage.getItem("token");
@@ -34,6 +37,17 @@ const initialState = {
   userLocation: userLocation || "",
   jobLocation: userLocation || "",
   showSidebar: false,
+  isEditing: false,
+  editJobId: "",
+  position: "",
+  company: "",
+  jobLocation: userLocation || "",
+  // Dropdown menu
+  jobTypeOptions: ["Full-Time", "Part-Time", "Remote", "Internship"],
+  jobType: "full-time",
+  // Dropdown menu
+  statusOptions: ["Pending", "Interview", "Declined"],
+  status: "Pending",
 };
 
 const AppContext = React.createContext();
@@ -43,6 +57,14 @@ const AppProvider = ({ children }) => {
   // Pass in our reducer function from reducer.js and our initialState
   // Our State set to default
   const [state, dispatch] = useReducer(reducer, initialState);
+
+  // Global Axios Setup
+  const authFetch = axios.create({
+    baseURL: "/api/v1",
+    headers: {
+      Authorization: `Bearer ${state.token}`,
+    },
+  });
 
   // Adds the three variables into local storage
   const addUserToLocalStorage = ({ user, token, location }) => {
@@ -144,7 +166,35 @@ const AppProvider = ({ children }) => {
   // Fires this action when they hit logout
   const logoutUser = () => {
     dispatch({ type: LOGOUT_USER });
-    removeUserFromLocalStorage()
+    removeUserFromLocalStorage();
+  };
+
+  const updateUser = async (currentUser) => {
+    // Our Loading
+    dispatch({ type: UPDATE_USER_BEGIN });
+    try {
+      // Using the Global Axios Instance above --> This doesn't carry the Bearer token across
+      const { data } = await authFetch.patch("/auth/updateUser", currentUser);
+
+      // The three values we want back from the axios fetch above
+      const { user, location, token } = data;
+
+      dispatch({
+        type: UPDATE_USER_SUCCESS,
+        // Add this into our payload
+        payload: { user, location, token },
+      });
+
+      // Adds the data to the local storage for refresh saves
+      addUserToLocalStorage({ user, location, token });
+    } catch (error) {
+      dispatch({
+        type: UPDATE_USER_ERROR,
+        payload: { msg: error.response.data.msg },
+      });
+    }
+    // Clears the alert after 3 seconds
+    clearAlert();
   };
 
   //  Returning our spread out (iteration over all) initialState to the whole application
@@ -158,6 +208,7 @@ const AppProvider = ({ children }) => {
         loginUser,
         toggleSidebar,
         logoutUser,
+        updateUser,
       }}
     >
       {/* This is our application --> This is what we are rendering */}

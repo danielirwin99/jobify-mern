@@ -77,7 +77,31 @@ const login = async (req, res) => {
 };
 
 const updateUser = async (req, res) => {
-  res.send("Update User");
+  // Pull through these credentials from our UserSchema
+  const { email, name, lastName, location } = req.body;
+
+  // If they are not inputted
+  if (!email || !name || !lastName || !location) {
+    throw new BadRequestError("Please provide all values");
+  }
+
+  // Finds the finds the _id that matches req.user.userId
+  const user = await User.findOne({ _id: req.user.userId });
+
+  // Updating the values
+  user.email = email;
+  user.name = name;
+  user.lastName = lastName;
+  user.location = location;
+
+  // Saves the user
+  await user.save();
+
+  // Create a new token
+  const token = user.createJWT();
+
+  // Our Response
+  res.status(StatusCodes.OK).json({ user, token, location: user.location });
 };
 
 export { register, login, updateUser };

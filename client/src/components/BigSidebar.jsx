@@ -9,7 +9,7 @@ const BigSidebar = () => {
     <Wrapper>
       <div
         className={
-          // We want to render the sidebar in the beginning until clicked off
+          // We want to render the sidebar in the beginning until clicked off --> Displayed by default
           showSidebar ? "sidebar-container" : "sidebar-container show-sidebar"
         }
       >
@@ -19,7 +19,7 @@ const BigSidebar = () => {
             <Logo />
           </header>
           {/* Our Links */}
-          <NavLinks />
+          <NavLinks  />
         </div>
       </div>
     </Wrapper>
