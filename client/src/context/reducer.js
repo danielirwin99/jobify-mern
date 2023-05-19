@@ -17,6 +17,8 @@ import {
   CREATE_JOB_BEGIN,
   CREATE_JOB_SUCCESS,
   CREATE_JOB_ERROR,
+  GET_JOBS_BEGIN,
+  GET_JOBS_SUCCESS,
 } from "./actions";
 
 // Pulling this through for the logout functionality
@@ -179,8 +181,8 @@ const reducer = (state, action) => {
       company: "",
       // The value is in the actual state
       jobLocation: state.userLocation,
-      jobType: "Full-Time",
-      status: "Pending",
+      jobType: "full-time",
+      status: "pending",
     };
     return { ...state, ...initialState };
   }
@@ -201,7 +203,7 @@ const reducer = (state, action) => {
     };
   }
 
-  // If we fail to register then fire these off
+  // If we fail to create a job then fire these off
   if (action.type === CREATE_JOB_ERROR) {
     return {
       ...state,
@@ -209,6 +211,26 @@ const reducer = (state, action) => {
       showAlert: true,
       alertType: "danger",
       alertText: action.payload.msg,
+    };
+  }
+
+  if (action.type === GET_JOBS_BEGIN) {
+    return {
+      ...state,
+      isLoading: true,
+    };
+  }
+
+  if (action.type === GET_JOBS_SUCCESS) {
+    return {
+      ...state,
+      isLoading: false,
+      showAlert: true,
+      jobs: action.payload.jobs,
+      totalJobs: action.payload.totalJobs,
+      numOfPages: action.payload.numOfPages,
+      alertType: "success",
+      alertText: "Jobs loaded successfully",
     };
   }
 

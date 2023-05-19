@@ -30,13 +30,14 @@ const AddJob = () => {
     e.preventDefault();
 
     // If all three values provided or not
-    // if (!position || !company || !jobLocation) {
-    //   displayAlert();
-    //   return;
-    // }
+    if (!position || !company || !jobLocation) {
+      displayAlert();
+      return;
+    }
 
     // By default isEditing is false
     if (isEditing) {
+      console.log(isEditing)
       return;
     }
     createJob();

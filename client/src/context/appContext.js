@@ -23,6 +23,8 @@ import {
   CREATE_JOB_BEGIN,
   CREATE_JOB_SUCCESS,
   CREATE_JOB_ERROR,
+  GET_JOBS_BEGIN,
+  GET_JOBS_SUCCESS,
 } from "./actions";
 
 const token = localStorage.getItem("token");
@@ -39,19 +41,26 @@ const initialState = {
   alertType: "",
   user: user ? JSON.parse(user) : null,
   token: token,
-  userLocation: userLocation || "",
-  jobLocation: userLocation || "",
+  userLocation: "",
+  jobLocation: "",
   showSidebar: false,
   isEditing: false,
   editJobId: "",
   position: "",
   company: "",
   // Dropdown menu
-  jobTypeOptions: ["Full-Time", "Part-Time", "Remote", "Internship"],
+  jobTypeOptions: ["full-time", "part-time", "remote", "internship"],
+  // Default Value
   jobType: "full-time",
   // Dropdown menu
-  statusOptions: ["Pending", "Interview", "Declined"],
-  status: "Pending",
+  statusOptions: ["pending", "interview", "declined"],
+  // Default value
+  status: "pending",
+  // These are for our "All Jobs" page on the dashboard
+  jobs: [],
+  totalJobs: 0,
+  page: 1,
+  numOfPages: 1,
 };
 
 const AppContext = React.createContext();
@@ -97,7 +106,7 @@ const AppProvider = ({ children }) => {
       dispatch({
         type: CLEAR_ALERT,
       });
-    }, 3000);
+    }, 10000);
   };
 
   // Our function to register
@@ -221,8 +230,8 @@ const AppProvider = ({ children }) => {
       // Want to get our JOB URL
       // From our URL we want to grab the values
       await authFetch.post("/jobs", {
-        position,
         company,
+        position,
         jobLocation,
         jobType,
         status,
@@ -242,6 +251,29 @@ const AppProvider = ({ children }) => {
         payload: { msg: error.response.data.msg },
       });
     }
+    // Clears the alert after 3 seconds
+    clearAlert();
+  };
+
+  const getJobs = async () => {
+    // Our endpoint of the route
+    let url = `/jobs`;
+
+    dispatch({ type: GET_JOBS_BEGIN });
+    try {
+      // Gets the API data
+      const { data } = await authFetch.get(url);
+      const { jobs, totalJobs, numOfPages } = data;
+      dispatch({
+        type: GET_JOBS_SUCCESS,
+        payload: jobs,
+        totalJobs,
+        numOfPages,
+      });
+    } catch (error) {
+      console.log(error.response);
+    }
+    clearAlert();
   };
 
   //  Returning our spread out (iteration over all) initialState to the whole application
@@ -259,6 +291,7 @@ const AppProvider = ({ children }) => {
         handleChange,
         clearValues,
         createJob,
+        getJobs,
       }}
     >
       {/* This is our application --> This is what we are rendering */}
