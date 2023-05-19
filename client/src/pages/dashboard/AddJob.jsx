@@ -5,6 +5,7 @@ import { FormRow, Alert, FormRowSelect } from "../../components";
 
 const AddJob = () => {
   const {
+    isLoading,
     // Did we click on edit job (boolean)
     isEditing,
     // Boolean
@@ -19,6 +20,9 @@ const AddJob = () => {
     jobTypeOptions,
     status,
     statusOptions,
+    handleChange,
+    clearValues,
+    createJob,
   } = useAppContext();
 
   // Our Button Function
@@ -26,18 +30,24 @@ const AddJob = () => {
     e.preventDefault();
 
     // If all three values provided or not
-    if (!position || !company || !jobLocation) {
-      displayAlert();
+    // if (!position || !company || !jobLocation) {
+    //   displayAlert();
+    //   return;
+    // }
+
+    // By default isEditing is false
+    if (isEditing) {
       return;
     }
-    console.log("Create Job");
+    createJob();
   };
 
   // Our Input Forms Function
   const handleJobInput = (e) => {
     const name = e.target.name;
     const value = e.target.value;
-    console.log(`${name} : ${value}`);
+    // Handles the change in the input to store it in the reducer
+    handleChange({ name, value });
   };
 
   return (
@@ -64,6 +74,7 @@ const AddJob = () => {
           <FormRow
             type="text"
             labelText="Job Location"
+            name="jobLocation"
             value={jobLocation}
             handleChange={handleJobInput}
           />
@@ -78,17 +89,30 @@ const AddJob = () => {
           <FormRowSelect
             labelText="type"
             name="jobType"
-            value={status}
+            value={jobType}
             handleChange={handleJobInput}
             list={jobTypeOptions}
           />
           <div className="btn-container">
+            {/* Submit Button */}
             <button
               className="btn btn-block submit-btn"
               type="submit"
               onClick={handleSubmit}
+              // Prevents user from submitting the form again in the middle of a request
+              disabled={isLoading}
             >
               Submit
+            </button>
+            {/* Clear Values Button */}
+            <button
+              className="btn btn-block clear-btn"
+              onClick={(e) => {
+                e.preventDefault();
+                clearValues();
+              }}
+            >
+              Clear
             </button>
           </div>
         </div>

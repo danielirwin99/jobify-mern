@@ -18,6 +18,11 @@ import {
   UPDATE_USER_BEGIN,
   UPDATE_USER_SUCCESS,
   UPDATE_USER_ERROR,
+  HANDLE_CHANGE,
+  CLEAR_VALUES,
+  CREATE_JOB_BEGIN,
+  CREATE_JOB_SUCCESS,
+  CREATE_JOB_ERROR,
 } from "./actions";
 
 const token = localStorage.getItem("token");
@@ -41,7 +46,6 @@ const initialState = {
   editJobId: "",
   position: "",
   company: "",
-  jobLocation: userLocation || "",
   // Dropdown menu
   jobTypeOptions: ["Full-Time", "Part-Time", "Remote", "Internship"],
   jobType: "full-time",
@@ -197,6 +201,49 @@ const AppProvider = ({ children }) => {
     clearAlert();
   };
 
+  // Global Function that handles the new inputs and stores it in the payload
+  // Looking for the name and the value
+  const handleChange = ({ name, value }) => {
+    dispatch({ type: HANDLE_CHANGE, payload: { name, value } });
+  };
+
+  const clearValues = () => {
+    dispatch({ type: CLEAR_VALUES });
+  };
+
+  const createJob = async () => {
+    dispatch({ type: CREATE_JOB_BEGIN });
+    try {
+      // We want to access the state that has all the values
+      // These values are the ones we want to display in our frontend cards
+      const { position, company, jobLocation, jobType, status } = state;
+
+      // Want to get our JOB URL
+      // From our URL we want to grab the values
+      await authFetch.post("/jobs", {
+        position,
+        company,
+        jobLocation,
+        jobType,
+        status,
+      });
+
+      // Once we have gotten our values we want to dispatch this action
+      dispatch({ type: CREATE_JOB_SUCCESS });
+
+      // Once we have a successful request / creation of job --> Clear the values in the form
+      dispatch({ CLEAR_VALUES });
+    } catch (error) {
+      // If the error code is equal to Status Code 401
+      if (error.response.status === 401) return;
+      // IF its not 401 --> Dispatch the Error payload
+      dispatch({
+        type: CREATE_JOB_ERROR,
+        payload: { msg: error.response.data.msg },
+      });
+    }
+  };
+
   //  Returning our spread out (iteration over all) initialState to the whole application
   //  This lets us use these across the whole project on the frontend
   return (
@@ -209,6 +256,9 @@ const AppProvider = ({ children }) => {
         toggleSidebar,
         logoutUser,
         updateUser,
+        handleChange,
+        clearValues,
+        createJob,
       }}
     >
       {/* This is our application --> This is what we are rendering */}

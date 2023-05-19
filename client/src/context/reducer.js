@@ -12,10 +12,19 @@ import {
   UPDATE_USER_BEGIN,
   UPDATE_USER_SUCCESS,
   UPDATE_USER_ERROR,
+  HANDLE_CHANGE,
+  CLEAR_VALUES,
+  CREATE_JOB_BEGIN,
+  CREATE_JOB_SUCCESS,
+  CREATE_JOB_ERROR,
 } from "./actions";
 
 // Pulling this through for the logout functionality
 import { initialState } from "./appContext";
+
+// -------------
+// State is the current values that are in the reducer NOT the initial/default values
+// -------------
 
 const reducer = (state, action) => {
   // If this action is fired --> Spread over the values and display them
@@ -143,6 +152,57 @@ const reducer = (state, action) => {
 
   // If we fail to register then fire these off
   if (action.type === UPDATE_USER_ERROR) {
+    return {
+      ...state,
+      isLoading: false,
+      showAlert: true,
+      alertType: "danger",
+      alertText: action.payload.msg,
+    };
+  }
+
+  if (action.type === HANDLE_CHANGE) {
+    return {
+      ...state,
+      // This will dynamically access the property based on the name
+      [action.payload.name]: action.payload.value,
+    };
+  }
+
+  if (action.type === CLEAR_VALUES) {
+    const initialState = {
+      // If the user is editing the job and at some point they decide that they're not going to do that
+      // We should set it back to the default state
+      isEditing: false,
+      editJobId: "",
+      position: "",
+      company: "",
+      // The value is in the actual state
+      jobLocation: state.userLocation,
+      jobType: "Full-Time",
+      status: "Pending",
+    };
+    return { ...state, ...initialState };
+  }
+
+  // When the user hits submit on add job
+  if (action.type === CREATE_JOB_BEGIN) {
+    return { ...state, isLoading: true };
+  }
+
+  // If the user creates a successful job
+  if (action.type === CREATE_JOB_SUCCESS) {
+    return {
+      ...state,
+      isLoading: false,
+      showAlert: true,
+      alertType: "success",
+      alertText: "New Job Created",
+    };
+  }
+
+  // If we fail to register then fire these off
+  if (action.type === CREATE_JOB_ERROR) {
     return {
       ...state,
       isLoading: false,
