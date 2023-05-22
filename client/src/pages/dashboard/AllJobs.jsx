@@ -1,9 +1,14 @@
-import React from 'react'
+import React from "react";
+import { JobsContainer, SearchContainer } from "../../components";
+import Wrapper from "../../assets/wrappers/Job";
 
 const AllJobs = () => {
   return (
-    <h1>All Jobs Page</h1>
-  )
-}
+    <Wrapper>
+      <SearchContainer />
+      <JobsContainer />
+    </Wrapper>
+  );
+};
 
-export default AllJobs
+export default AllJobs;

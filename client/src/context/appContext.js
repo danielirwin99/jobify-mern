@@ -1,5 +1,4 @@
-import React, { useReducer } from "react";
-import { useContext } from "react";
+import React, { useReducer, useContext } from "react";
 import axios from "axios";
 
 import reducer from "./reducer";
@@ -33,6 +32,7 @@ const userLocation = localStorage.getItem("location");
 
 // The initial states of each / Default values
 const initialState = {
+  userLoading: true,
   isLoading: false,
   showAlert: false,
   //   What will show when the error pops up
@@ -41,19 +41,20 @@ const initialState = {
   alertType: "",
   user: user ? JSON.parse(user) : null,
   token: token,
-  userLocation: "",
-  jobLocation: "",
+  userLocation: userLocation || "",
   showSidebar: false,
   isEditing: false,
+  // Our "Add Jobs" page states
   editJobId: "",
   position: "",
   company: "",
+  jobLocation: userLocation || "",
   // Dropdown menu
   jobTypeOptions: ["full-time", "part-time", "remote", "internship"],
   // Default Value
   jobType: "full-time",
   // Dropdown menu
-  statusOptions: ["pending", "interview", "declined"],
+  statusOptions: ["interview", "declined", "pending"],
   // Default value
   status: "pending",
   // These are for our "All Jobs" page on the dashboard
@@ -71,13 +72,35 @@ const AppProvider = ({ children }) => {
   // Our State set to default
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  // Global Axios Setup
+  // Axios Setup
   const authFetch = axios.create({
     baseURL: "/api/v1",
-    headers: {
-      Authorization: `Bearer ${state.token}`,
-    },
   });
+
+  // Request Axios
+  authFetch.interceptors.request.use(
+    (config) => {
+      config.headers["Authorization"] = `Bearer ${state.token}`;
+      return config;
+    },
+    (error) => {
+      return Promise.reject(error);
+    }
+  );
+
+  // Response Axios
+  authFetch.interceptors.response.use(
+    (response) => {
+      return response;
+    },
+    (error) => {
+      console.log(error.response);
+      if (error.response.status === 401) {
+        console.log("AUTH ERROR");
+      }
+      return Promise.reject(error);
+    }
+  );
 
   // Adds the three variables into local storage
   const addUserToLocalStorage = ({ user, token, location }) => {
@@ -148,6 +171,7 @@ const AppProvider = ({ children }) => {
       // We are looking for the data that the response gave in registerUser
       const { data } = await axios.post("/api/v1/auth/login", currentUser);
 
+      console.log(data);
       // We want back the three credentials
       const { user, token, location } = data;
       // After we got all three --> dispatch that it was successful with the payloads
@@ -264,14 +288,18 @@ const AppProvider = ({ children }) => {
       // Gets the API data
       const { data } = await authFetch.get(url);
       const { jobs, totalJobs, numOfPages } = data;
+      // Dispatches our payloads that carry to our localStorage
       dispatch({
         type: GET_JOBS_SUCCESS,
-        payload: jobs,
-        totalJobs,
-        numOfPages,
+        payload: {
+          jobs,
+          totalJobs,
+          numOfPages,
+        },
       });
     } catch (error) {
       console.log(error.response);
+      logoutUser();
     }
     clearAlert();
   };

@@ -218,6 +218,7 @@ const reducer = (state, action) => {
     return {
       ...state,
       isLoading: true,
+      showAlert: false,
     };
   }
 
@@ -234,7 +235,7 @@ const reducer = (state, action) => {
     };
   }
 
-  throw new Error(`No such action : ${action.type}`);
+  // throw new Error(`No such action : ${action.type}`);
 };
 
 export default reducer;
