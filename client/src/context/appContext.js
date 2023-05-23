@@ -26,6 +26,9 @@ import {
   GET_JOBS_SUCCESS,
   SET_EDIT_JOB,
   DELETE_JOB_BEGIN,
+  EDIT_JOB_BEGIN,
+  EDIT_JOB_SUCCESS,
+  EDIT_JOB_ERROR,
 } from "./actions";
 
 const token = localStorage.getItem("token");
@@ -268,7 +271,7 @@ const AppProvider = ({ children }) => {
       dispatch({ type: CREATE_JOB_SUCCESS });
 
       // Once we have a successful request / creation of job --> Clear the values in the form
-      dispatch({ CLEAR_VALUES });
+      dispatch({ type: CLEAR_VALUES });
     } catch (error) {
       // If the error code is equal to Status Code 401
       if (error.response.status === 401) return;
@@ -312,8 +315,31 @@ const AppProvider = ({ children }) => {
     dispatch({ type: SET_EDIT_JOB, payload: { id } });
   };
 
-  const editJob = () => {
-    console.log("edit job");
+  const editJob = async () => {
+    dispatch({ type: EDIT_JOB_BEGIN });
+    try {
+      // Grab these values from the state
+      const { position, jobLocation, company, jobType, status } = state;
+
+      await authFetch.patch(`/jobs/${state.editJobId}`, {
+        // Pass in the data just in case the values are different to the ones on the server
+        company,
+        status,
+        jobLocation,
+        jobType,
+        position,
+      });
+      dispatch({ type: EDIT_JOB_SUCCESS });
+      // If everything is correct we want to set it back to default
+      dispatch({ type: CLEAR_VALUES });
+    } catch (error) {
+      if (error.response.status === 401) return;
+      dispatch({
+        type: EDIT_JOB_ERROR,
+        payload: { msg: error.response.data.msg },
+      });
+    }
+    clearAlert();
   };
 
   const deleteJob = async (jobId) => {

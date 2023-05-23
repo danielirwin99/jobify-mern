@@ -48,6 +48,7 @@ const Job = ({
             <button
               type="button"
               className="btn delete-btn"
+              // We are passing through the id of the job to delete
               onClick={() => deleteJob(_id)}
             >
               Delete

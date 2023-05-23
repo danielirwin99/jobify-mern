@@ -21,6 +21,9 @@ import {
   GET_JOBS_SUCCESS,
   SET_EDIT_JOB,
   DELETE_JOB_BEGIN,
+  EDIT_JOB_BEGIN,
+  EDIT_JOB_SUCCESS,
+  EDIT_JOB_ERROR,
 } from "./actions";
 
 // Pulling this through for the logout functionality
@@ -261,6 +264,30 @@ const reducer = (state, action) => {
   // If we click delete on our frontend to delete a job
   if (action.type === DELETE_JOB_BEGIN) {
     return { ...state, isLoading: true };
+  }
+
+  if (action.type === EDIT_JOB_BEGIN) {
+    return { ...state, isLoading: true };
+  }
+
+  if (action.type === EDIT_JOB_SUCCESS) {
+    return {
+      ...state,
+      isLoading: false,
+      showAlert: true,
+      alertType: "success",
+      alertText: "Successfully Edited Job",
+    };
+  }
+
+  if (action.type === EDIT_JOB_ERROR) {
+    return {
+      ...state,
+      isLoading: false,
+      showAlert: true,
+      alertType: "danger",
+      alertText: action.payload.msg,
+    };
   }
 
   throw new Error(`No such action : ${action.type}`);
