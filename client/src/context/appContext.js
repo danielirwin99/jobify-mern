@@ -81,6 +81,7 @@ const AppProvider = ({ children }) => {
   authFetch.interceptors.request.use(
     (config) => {
       config.headers["Authorization"] = `Bearer ${state.token}`;
+      console.log(config.headers["Authorization"]);
       return config;
     },
     (error) => {
@@ -254,8 +255,8 @@ const AppProvider = ({ children }) => {
       // Want to get our JOB URL
       // From our URL we want to grab the values
       await authFetch.post("/jobs", {
-        company,
         position,
+        company,
         jobLocation,
         jobType,
         status,

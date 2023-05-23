@@ -37,7 +37,7 @@ const AddJob = () => {
 
     // By default isEditing is false
     if (isEditing) {
-      console.log(isEditing)
+      console.log(isEditing);
       return;
     }
     createJob();

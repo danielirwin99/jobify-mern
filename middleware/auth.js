@@ -20,11 +20,10 @@ const auth = async (req, res, next) => {
     // console.log(payload);
 
     req.user = { userId: payload.userId };
+    next();
   } catch (error) {
     throw new UnAuthenticatedError("Authentication Invalid");
   }
-
-  next();
 };
 
 export default auth;
