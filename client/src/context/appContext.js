@@ -24,6 +24,8 @@ import {
   CREATE_JOB_ERROR,
   GET_JOBS_BEGIN,
   GET_JOBS_SUCCESS,
+  SET_EDIT_JOB,
+  DELETE_JOB_BEGIN,
 } from "./actions";
 
 const token = localStorage.getItem("token");
@@ -305,6 +307,30 @@ const AppProvider = ({ children }) => {
     clearAlert();
   };
 
+  // Allows us to edit the job from all jobs page
+  const setEditJob = (id) => {
+    dispatch({ type: SET_EDIT_JOB, payload: { id } });
+  };
+
+  const editJob = () => {
+    console.log("edit job");
+  };
+
+  const deleteJob = async (jobId) => {
+    // Fire our state values and isLoading animation
+    dispatch({ type: DELETE_JOB_BEGIN });
+    try {
+      // Fetch the jobs and delete the one with that id
+      await authFetch.delete(`/jobs/${jobId}`);
+      // After we delete a job --> We want to make a request to get the LATEST JOBS
+      getJobs();
+    } catch (error) {
+      // If we get an error --> Logout the user
+      // logoutUser();
+      console.log(error);
+    }
+  };
+
   //  Returning our spread out (iteration over all) initialState to the whole application
   //  This lets us use these across the whole project on the frontend
   return (
@@ -321,6 +347,9 @@ const AppProvider = ({ children }) => {
         clearValues,
         createJob,
         getJobs,
+        setEditJob,
+        deleteJob,
+        editJob,
       }}
     >
       {/* This is our application --> This is what we are rendering */}

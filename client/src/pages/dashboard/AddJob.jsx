@@ -23,6 +23,7 @@ const AddJob = () => {
     handleChange,
     clearValues,
     createJob,
+    editJob,
   } = useAppContext();
 
   // Our Button Function
@@ -37,7 +38,7 @@ const AddJob = () => {
 
     // By default isEditing is false
     if (isEditing) {
-      console.log(isEditing);
+      editJob();
       return;
     }
     createJob();

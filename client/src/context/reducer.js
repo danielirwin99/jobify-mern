@@ -19,6 +19,8 @@ import {
   CREATE_JOB_ERROR,
   GET_JOBS_BEGIN,
   GET_JOBS_SUCCESS,
+  SET_EDIT_JOB,
+  DELETE_JOB_BEGIN,
 } from "./actions";
 
 // Pulling this through for the logout functionality
@@ -214,6 +216,7 @@ const reducer = (state, action) => {
     };
   }
 
+  // When we click on All Jobs tab
   if (action.type === GET_JOBS_BEGIN) {
     return {
       ...state,
@@ -222,6 +225,7 @@ const reducer = (state, action) => {
     };
   }
 
+  // If it is a successful fetch
   if (action.type === GET_JOBS_SUCCESS) {
     return {
       ...state,
@@ -230,12 +234,36 @@ const reducer = (state, action) => {
       jobs: action.payload.jobs,
       totalJobs: action.payload.totalJobs,
       numOfPages: action.payload.numOfPages,
-      alertType: "success",
-      alertText: "Jobs loaded successfully",
     };
   }
 
-  // throw new Error(`No such action : ${action.type}`);
+  // If we click on edit job
+  if (action.type === SET_EDIT_JOB) {
+    // Searches to see if our job._id matches the one we clicked
+    const job = state.jobs.find((job) => job._id === action.payload.id);
+
+    // Once we have the job we want to pull out the following values
+    const { _id, position, company, jobLocation, jobType, status } = job;
+
+    // Return all the values that we passed through
+    return {
+      ...state,
+      isEditing: true,
+      editJobId: _id,
+      position,
+      company,
+      jobLocation,
+      jobType,
+      status,
+    };
+  }
+
+  // If we click delete on our frontend to delete a job
+  if (action.type === DELETE_JOB_BEGIN) {
+    return { ...state, isLoading: true };
+  }
+
+  throw new Error(`No such action : ${action.type}`);
 };
 
 export default reducer;

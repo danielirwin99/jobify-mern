@@ -1,7 +1,5 @@
 import React from "react";
-import { NavLink } from "react-router-dom";
 import Wrapper from "../assets/wrappers/SmallSidebar";
-import links from "../utils/links";
 import { useAppContext } from "../context/appContext";
 import Logo from "./Logo";
 import { FaTimes } from "react-icons/fa";
