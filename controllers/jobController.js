@@ -3,9 +3,10 @@ import {
   NotFoundError,
   UnAuthenticatedError,
 } from "../errors/index.js";
-import Job from "../models/job.js";
+import Job from "../models/Job.js";
 import { StatusCodes } from "http-status-codes";
 import checkPermissions from "../utils/checkPermissions.js";
+import mongoose from "mongoose";
 
 // ------------------
 // Creating a new job
@@ -87,13 +88,35 @@ const deleteJob = async (req, res) => {
   // If we trigger the error --> We don't want to run the function below
   checkPermissions(req.user, job.createdBy);
 
-  await job.deleteOne()
+  await job.deleteOne();
 
   res.status(StatusCodes.OK).json({ msg: "Success! Job Removed" });
 };
 
-const showStats = (req, res) => {
-  res.send("Show all stats");
+const showStats = async (req, res) => {
+  // Using the aggregation-pipeline method --> Check MongoDB Docs
+  let stats = await Job.aggregate([
+    // Get me all the jobs that belong to the certain userId
+    { $match: { createdBy: new mongoose.Types.ObjectId(req.user.userId) } },
+
+    // Whatever is remainder
+    // We are accessing the status property value
+    // Count is how many were under the property value x by the sum value
+    // i.e there are 20 declined with a sum of 1 --> "count" : 20
+    { $group: { _id: "$status", count: { $sum: 1 } } },
+  ]);
+
+  // Using the .reduce method
+  stats = stats.reduce((acc, curr) => {
+    // We want to pull out our title and count out of the iteration
+    const { _id: title, count } = curr;
+    // acc --> The object that you're returning
+    // title --> Whatever is the value i.e pending, declined or interview
+    acc[title] = count;
+    return acc;
+  });
+
+  res.status(StatusCodes.OK).json({ stats });
 };
 
 export { createJob, deleteJob, getAllJobs, updateJob, showStats };
