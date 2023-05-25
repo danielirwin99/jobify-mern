@@ -8,10 +8,11 @@ import { dirname } from "path";
 import { fileURLToPath } from "url";
 import path from "path";
 // Security Packages
-import helmet from 'helmet';
-import xss from 'xss-clean';
-import mongoSanitize from 'express-mongo-sanitize';
-
+import helmet from "helmet";
+import xss from "xss-clean";
+import mongoSanitize from "express-mongo-sanitize";
+// Our Cookie import
+import cookieParser from "cookie-parser";
 
 // Connects us to the mongoDB and authenticateUser
 import connectDB from "./db/connect.js";
@@ -32,6 +33,9 @@ if (process.env.NODE_ENV !== "production") {
 // Lets us pass through json data with this Express Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Our Cookie Middleware
+app.use(cookieParser());
 
 // Security Packages
 app.use(helmet());

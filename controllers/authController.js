@@ -7,6 +7,7 @@ import {
   NotFoundError,
   UnAuthenticatedError,
 } from "../errors/index.js";
+import attachCookies from "../utils/attachCookies.js";
 
 const register = async (req, res) => {
   // Pull through these three credentials
@@ -27,6 +28,9 @@ const register = async (req, res) => {
   // Invokes our token from JWT
   const token = user.createJWT();
 
+  // Cookie token --> Our function is in the Utils folder
+  attachCookies({ res, token });
+
   // Imported from our http-status-codes library package
   res.status(StatusCodes.CREATED).json({
     user: {
@@ -35,7 +39,8 @@ const register = async (req, res) => {
       location: user.location,
       name: user.name,
     },
-    token,
+    // Don't need the token after using cookies
+    // token,
     location: user.location,
   });
 };
@@ -72,6 +77,9 @@ const login = async (req, res) => {
 
   // Removes the password from the response so the Frontend does not get it
   user.password = undefined;
+
+  // Cookie token --> Our function is in the Utils folder
+  attachCookies({ res, token });
 
   res.status(StatusCodes.OK).json({ user, token, location: user.location });
 };

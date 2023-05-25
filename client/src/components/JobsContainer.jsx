@@ -2,6 +2,7 @@ import { useAppContext } from "../context/appContext";
 import { useEffect } from "react";
 import Loading from "./Loading";
 import Job from "./Job";
+import Alert from "./Alert";
 import Wrapper from "../assets/wrappers/JobsContainer";
 import PageBtnContainer from "./PageBtnContainer";
 
@@ -17,6 +18,7 @@ const JobsContainer = () => {
     searchType,
     sort,
     numOfPages,
+    showAlert,
   } = useAppContext();
 
   // Once the Jobs Container renders
@@ -46,6 +48,7 @@ const JobsContainer = () => {
   // If jobs.length > 0
   return (
     <Wrapper>
+      {showAlert && <Alert />}
       <h5>
         {/* If there there is more than 1 job --> Add the "s" */}
         {totalJobs} job{jobs.length > 1 && "s"} found

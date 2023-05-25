@@ -7,7 +7,6 @@ const Stats = () => {
 
   useEffect(() => {
     showStats();
-    console.log(monthlyApplications);
   }, []);
 
   if (isLoading) {
