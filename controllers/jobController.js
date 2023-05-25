@@ -32,6 +32,7 @@ const createJob = async (req, res) => {
 // Getting the jobs
 // ------------------
 const getAllJobs = async (req, res) => {
+  console.log(req.user)
   // We are pulling out these values to use for our query search that we are passing in the frontend
   const { search, status, jobType, sort } = req.query;
 

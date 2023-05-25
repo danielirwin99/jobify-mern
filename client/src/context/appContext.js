@@ -26,6 +26,7 @@ import {
   GET_JOBS_SUCCESS,
   SET_EDIT_JOB,
   DELETE_JOB_BEGIN,
+  DELETE_JOB_ERROR,
   EDIT_JOB_BEGIN,
   EDIT_JOB_SUCCESS,
   EDIT_JOB_ERROR,
@@ -189,7 +190,7 @@ const AppProvider = ({ children }) => {
       // We are looking for the data that the response gave in registerUser
       const { data } = await axios.post("/api/v1/auth/login", currentUser);
 
-      console.log(data);
+      // console.log(data);
       // We want back the three credentials
       const { user, token, location } = data;
       // After we got all three --> dispatch that it was successful with the payloads
@@ -371,9 +372,12 @@ const AppProvider = ({ children }) => {
       // After we delete a job --> We want to make a request to get the LATEST JOBS
       getJobs();
     } catch (error) {
-      // If we get an error --> Logout the user
-      logoutUser();
-      // console.log(error);
+      // Handles the errors when we try to delete job
+      if (error.response.status === 401) return;
+      dispatch({
+        type: DELETE_JOB_ERROR,
+        payload: { msg: error.response.data.msg },
+      });
     }
   };
 

@@ -1,5 +1,6 @@
 import express from "express";
 const router = express.Router();
+import testUser from "../middleware/testUser.js";
 
 import {
   createJob,
@@ -9,8 +10,8 @@ import {
   showStats,
 } from "../controllers/jobController.js";
 
-router.route("/").post(createJob).get(getAllJobs);
+router.route("/").post(testUser, createJob).get(getAllJobs);
 router.route("/stats").get(showStats);
-router.route("/:id").patch(updateJob).delete(deleteJob);
+router.route("/:id").patch(testUser, updateJob).delete(testUser, deleteJob);
 
 export default router;
