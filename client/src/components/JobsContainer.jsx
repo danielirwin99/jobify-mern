@@ -3,14 +3,32 @@ import { useEffect } from "react";
 import Loading from "./Loading";
 import Job from "./Job";
 import Wrapper from "../assets/wrappers/JobsContainer";
+import PageBtnContainer from "./PageBtnContainer";
 
 const JobsContainer = () => {
-  const { getJobs, jobs, page, isLoading, totalJobs } = useAppContext();
+  const {
+    getJobs,
+    jobs,
+    page,
+    isLoading,
+    totalJobs,
+    search,
+    searchStatus,
+    searchType,
+    sort,
+    numOfPages,
+  } = useAppContext();
 
   // Once the Jobs Container renders
   useEffect(() => {
-    getJobs();
-  }, []);
+    // Creates a delay so we can type without lag
+    const delayForTyping = setTimeout(() => {
+      getJobs();
+    }, 700);
+
+    return () => clearTimeout(delayForTyping);
+    // All these values are carried through every time we refresh the page on All Jobs
+  }, [search, searchStatus, searchType, sort, page]);
 
   if (isLoading) {
     return <Loading center />;
@@ -38,6 +56,7 @@ const JobsContainer = () => {
         })}
       </div>
       {/* Pagination Buttons */}
+      {numOfPages > 1 && <PageBtnContainer />}
     </Wrapper>
   );
 };

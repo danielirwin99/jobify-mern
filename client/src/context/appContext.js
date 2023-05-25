@@ -29,6 +29,10 @@ import {
   EDIT_JOB_BEGIN,
   EDIT_JOB_SUCCESS,
   EDIT_JOB_ERROR,
+  SHOW_STATS_BEGIN,
+  SHOW_STATS_SUCCESS,
+  CLEAR_FILTERS,
+  CHANGE_PAGE,
 } from "./actions";
 
 const token = localStorage.getItem("token");
@@ -67,6 +71,15 @@ const initialState = {
   totalJobs: 0,
   page: 1,
   numOfPages: 1,
+  stats: {},
+  monthlyApplications: [],
+  search: "",
+  searchStatus: "all",
+  // Dropdown menu
+  searchType: "all",
+  sort: "latest",
+  // Dropdown menu
+  sortOptions: ["latest", "oldest", "a-z", "z-a"],
 };
 
 const AppContext = React.createContext();
@@ -86,7 +99,6 @@ const AppProvider = ({ children }) => {
   authFetch.interceptors.request.use(
     (config) => {
       config.headers["Authorization"] = `Bearer ${state.token}`;
-      console.log(config.headers["Authorization"]);
       return config;
     },
     (error) => {
@@ -286,8 +298,16 @@ const AppProvider = ({ children }) => {
   };
 
   const getJobs = async () => {
+    // Pulled to add into our url for search params
+    const { search, searchStatus, searchType, sort, page } = state;
+
     // Our endpoint of the route
-    let url = `/jobs`;
+    let url = `/jobs?page=${page}&status=${searchStatus}&jobType=${searchType}&sort=${sort}`;
+
+    // If the search is not empty --> Add into the search params
+    if (search) {
+      url = url + `&search=${search}`;
+    }
 
     dispatch({ type: GET_JOBS_BEGIN });
     try {
@@ -304,7 +324,7 @@ const AppProvider = ({ children }) => {
         },
       });
     } catch (error) {
-      console.log(error.response);
+      // console.log(error.response);
       logoutUser();
     }
     clearAlert();
@@ -352,9 +372,39 @@ const AppProvider = ({ children }) => {
       getJobs();
     } catch (error) {
       // If we get an error --> Logout the user
-      // logoutUser();
-      console.log(error);
+      logoutUser();
+      // console.log(error);
     }
+  };
+
+  const showStats = async () => {
+    dispatch({ type: SHOW_STATS_BEGIN });
+    try {
+      // Fetching the stats from axios to backend
+      const { data } = await authFetch.get("/jobs/stats");
+
+      dispatch({
+        type: SHOW_STATS_SUCCESS,
+        payload: {
+          // Pass through these two into our payload
+          stats: data.defaultStats,
+          monthlyApplications: data.monthlyApplications,
+        },
+      });
+    } catch (error) {
+      // console.log(error.response);
+      logoutUser();
+    }
+  };
+
+  // Clears all changed data in the Search Form
+  const clearFilters = () => {
+    dispatch({ type: CLEAR_FILTERS });
+  };
+
+  // Changes the page
+  const changePage = (page) => {
+    dispatch({ type: CHANGE_PAGE, payload: { page } });
   };
 
   //  Returning our spread out (iteration over all) initialState to the whole application
@@ -376,6 +426,9 @@ const AppProvider = ({ children }) => {
         setEditJob,
         deleteJob,
         editJob,
+        showStats,
+        clearFilters,
+        changePage,
       }}
     >
       {/* This is our application --> This is what we are rendering */}

@@ -7,6 +7,7 @@ import Job from "../models/Job.js";
 import { StatusCodes } from "http-status-codes";
 import checkPermissions from "../utils/checkPermissions.js";
 import mongoose from "mongoose";
+import moment from "moment";
 
 // ------------------
 // Creating a new job
@@ -27,11 +28,72 @@ const createJob = async (req, res) => {
   res.status(StatusCodes.CREATED).json({ job });
 };
 
+// ------------------
+// Getting the jobs
+// ------------------
 const getAllJobs = async (req, res) => {
-  const jobs = await Job.find({ createdBy: req.user.userId });
-  res
-    .status(StatusCodes.OK)
-    .json({ jobs, totalJobs: jobs.length, numOfPages: 1 });
+  // We are pulling out these values to use for our query search that we are passing in the frontend
+  const { search, status, jobType, sort } = req.query;
+
+  const queryObject = {
+    createdBy: req.user.userId,
+  };
+
+   // Search will be added conditionally (not like the other 2 above)
+   if (search) {
+    // Mongoose regex lets us search everything without having to type in specifics
+    queryObject.position = { $regex: search, $options: "i" }; // $options: "i" --> removes case sensitive
+  }
+
+  // Add stuff based on conditions
+
+  // If status does NOT equal to all --> It has to be either pending, declined or interview
+  if (status !== "all") {
+    queryObject.status = status;
+  }
+
+  // Same as above but for jobType
+  if (jobType !== "all") {
+    queryObject.jobType = jobType;
+  }
+
+  // NO AWAIT
+  let result = Job.find(queryObject);
+
+  // -------------
+  // Chain sort conditions
+  // -------------
+  if (sort === "latest") {
+    // Descending Order
+    result = result.sort("-createdAt");
+  }
+
+  if (sort === "oldest") {
+    // Ascending Order
+    result = result.sort("createdAt");
+  }
+
+  if (sort === "a-z") {
+    // We already have it in order so its just default
+    result = result.sort("position");
+  }
+
+  if (sort === "z-a") {
+    result = result.sort("-position");
+  }
+
+  // Our Pagination Functionality
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+  result = result.skip(skip).limit(limit);
+
+  const jobs = await result;
+
+  const totalJobs = await Job.countDocuments(queryObject);
+  const numOfPages = Math.ceil(totalJobs / limit);
+
+  res.status(StatusCodes.OK).json({ jobs, totalJobs, numOfPages });
 };
 
 // ----------------
@@ -93,6 +155,10 @@ const deleteJob = async (req, res) => {
   res.status(StatusCodes.OK).json({ msg: "Success! Job Removed" });
 };
 
+// -------------------
+// GETS ALL THE STATS
+// -------------------
+
 const showStats = async (req, res) => {
   // Using the aggregation-pipeline method --> Check MongoDB Docs
   let stats = await Job.aggregate([
@@ -106,7 +172,7 @@ const showStats = async (req, res) => {
     { $group: { _id: "$status", count: { $sum: 1 } } },
   ]);
 
-  // Using the .reduce method
+  // Using the .reduce method --- TURNS it into an object from an array
   stats = stats.reduce((acc, curr) => {
     // We want to pull out our title and count out of the iteration
     const { _id: title, count } = curr;
@@ -114,9 +180,66 @@ const showStats = async (req, res) => {
     // title --> Whatever is the value i.e pending, declined or interview
     acc[title] = count;
     return acc;
-  });
+  }, {});
 
-  res.status(StatusCodes.OK).json({ stats });
+  // Categorises the stats to equal the value above OR 0 --> So our Frontend doesn't break
+  const defaultStats = {
+    pending: stats.pending || 0,
+    interview: stats.interview || 0,
+    declined: stats.declined || 0,
+  };
+
+  // Our Monthly Applications Structure
+  let monthlyApplications = await Job.aggregate([
+    // Grabbing all the jobs that belong to the specific userId
+    { $match: { createdBy: new mongoose.Types.ObjectId(req.user.userId) } },
+    {
+      $group: {
+        // We will group based on year and month
+        _id: {
+          year: {
+            // Let year equal the createdAt year
+            $year: "$createdAt",
+          },
+          month: {
+            // Let month equal the createdAt month
+            $month: "$createdAt",
+          },
+        },
+        // group x the sum value = 1
+        count: { $sum: 1 },
+      },
+    },
+    // Sorting by the latest jobs first (-1) --> Descending order
+    { $sort: { "_id.year": -1, "_id.month": -1 } },
+    // Only displays the last 6 months --> For our chart
+    { $limit: 6 },
+  ]);
+
+  // Iterating over the data
+  monthlyApplications = monthlyApplications
+    .map((item) => {
+      const {
+        // Pull out year and month from the id
+        _id: { year, month },
+        // Pull out the count from the data
+        count,
+      } = item;
+
+      // Using our moment npm package
+      // In moment package it counts the months 0-11, whereas on MongoDB its 1-12
+      // ---> Thats why we need to -1
+      const date = moment()
+        .month(month - 1)
+        .year(year - 1)
+        .format("MMM Y");
+      // Returning these two
+      return { date, count };
+    })
+    // The charts are going to be showing oldest to newest so we need to flip it
+    .reverse();
+
+  res.status(StatusCodes.OK).json({ defaultStats, monthlyApplications });
 };
 
 export { createJob, deleteJob, getAllJobs, updateJob, showStats };

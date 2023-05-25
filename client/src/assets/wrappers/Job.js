@@ -86,7 +86,7 @@ const Wrapper = styled.article`
   .delete-btn {
     letter-spacing: var(--letterSpacing);
     cursor: pointer;
-    height: 30px;
+    height: 35px;
   }
   .edit-btn {
     color: var(--green-dark);

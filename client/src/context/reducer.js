@@ -24,6 +24,10 @@ import {
   EDIT_JOB_BEGIN,
   EDIT_JOB_SUCCESS,
   EDIT_JOB_ERROR,
+  SHOW_STATS_BEGIN,
+  SHOW_STATS_SUCCESS,
+  CLEAR_FILTERS,
+  CHANGE_PAGE,
 } from "./actions";
 
 // Pulling this through for the logout functionality
@@ -173,6 +177,8 @@ const reducer = (state, action) => {
       ...state,
       // This will dynamically access the property based on the name
       [action.payload.name]: action.payload.value,
+      // Sets the page back to one when we make a change in the search function
+      page: 1,
     };
   }
 
@@ -288,6 +294,35 @@ const reducer = (state, action) => {
       alertType: "danger",
       alertText: action.payload.msg,
     };
+  }
+
+  if (action.type === SHOW_STATS_BEGIN) {
+    return { ...state, isLoading: true, showAlert: false };
+  }
+
+  if (action.type === SHOW_STATS_SUCCESS) {
+    return {
+      ...state,
+      isLoading: false,
+      stats: action.payload.stats,
+      monthlyApplications: action.payload.monthlyApplications,
+    };
+  }
+
+  if (action.type === CLEAR_FILTERS) {
+    return {
+      ...state,
+      search: "",
+      searchStatus: "all",
+      searchType: "all",
+      sort: "latest",
+      sortOptions: ["latest", "oldest", "a-z", "z-a"],
+    };
+  }
+
+  // If we click dispatch change page function we fire off this
+  if (action.type === CHANGE_PAGE) {
+    return { ...state, page: action.payload.page };
   }
 
   throw new Error(`No such action : ${action.type}`);

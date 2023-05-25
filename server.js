@@ -31,7 +31,7 @@ app.use(express.urlencoded({ extended: false }));
 // });
 
 app.get("/api/v1", (req, res) => {
-  res.json({ msg: "API!" });
+  res.json({ msg: "Api Route" });
 });
 
 // Our Auth Router

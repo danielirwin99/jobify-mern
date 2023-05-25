@@ -8,7 +8,7 @@ const Wrapper = styled.section`
   .form-input,
   .form-select,
   .btn-block {
-    height: 35px;
+    height: 40px;
   }
   .form-row {
     margin-bottom: 0;

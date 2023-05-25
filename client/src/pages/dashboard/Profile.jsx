@@ -16,10 +16,10 @@ const Profile = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     // If there is not one of these filled in display the alert and stop the function
-    // if (!name || !email || !lastName || !location) {
-    //   displayAlert();
-    //   return;
-    // }
+    if (!name || !email || !lastName || !location) {
+      displayAlert();
+      return;
+    }
     // If there is --> Fire this function from appContext and update it
     updateUser({ name, email, lastName, location });
   };
