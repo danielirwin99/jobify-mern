@@ -21,10 +21,10 @@ const JobsContainer = () => {
 
   // Once the Jobs Container renders
   useEffect(() => {
-    // Creates a delay so we can type without lag
+    // Creates a delay for processing the jobs so we can type without lag
     const delayForTyping = setTimeout(() => {
       getJobs();
-    }, 700);
+    }, 500);
 
     return () => clearTimeout(delayForTyping);
     // All these values are carried through every time we refresh the page on All Jobs

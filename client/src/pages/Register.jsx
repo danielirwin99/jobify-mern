@@ -104,6 +104,20 @@ const Register = () => {
         <button type="submit" className="btn btn-block" disabled={isLoading}>
           Submit
         </button>
+        <button
+          type="button"
+          className="btn btn-block btn-hipster"
+          disabled={isLoading}
+          onClick={() =>
+            loginUser({
+              email: "guestuser@email.com",
+              password: "secret",
+              alertText: "Login Successful! Redirecting...",
+            })
+          }
+        >
+          {isLoading ? "loading..." : "Guest Login"}
+        </button>
         <p>
           {/* If user is a member --> Show "Not a member yet" otherwise show the other */}
           {values.isMember ? "Not a member yet?" : "Already a member?"}
