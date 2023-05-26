@@ -24,12 +24,13 @@ router.route("/register").post(apiLimiter, register);
 // Route of logging in
 router.route("/login").post(apiLimiter, login);
 
+// Logs out the User with Cookie Functions
+router.get("/logout", logoutUser);
+
 // Route of editing the user info --> Also for restricting a guest user functionality
 router.route("/updateUser").patch(authenticateUser, testUser, updateUser);
 
 // Cookie route to getting the user --> Restricted as well
 router.route("/getCurrentUser").get(authenticateUser, getCurrentUser);
-
-router.route("/logout").get(logoutUser);
 
 export default router;
