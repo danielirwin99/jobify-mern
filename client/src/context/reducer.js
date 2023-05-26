@@ -29,14 +29,16 @@ import {
   CLEAR_FILTERS,
   CHANGE_PAGE,
   DELETE_JOB_ERROR,
+  GET_CURRENT_USER_BEGIN,
+  GET_CURRENT_USER_SUCCESS,
 } from "./actions";
 
 // Pulling this through for the logout functionality
 import { initialState } from "./appContext";
 
-// -------------
+// -------------------
 // State is the current values that are in the reducer NOT the initial/default values
-// -------------
+// --------------------
 
 const reducer = (state, action) => {
   // If this action is fired --> Spread over the values and display them
@@ -69,7 +71,6 @@ const reducer = (state, action) => {
     return {
       ...state,
       isLoading: false,
-      token: action.payload.token,
       user: action.payload.user,
       userLocation: action.payload.userLocation,
       jobLocation: action.payload.jobLocation,
@@ -100,7 +101,6 @@ const reducer = (state, action) => {
     return {
       ...state,
       isLoading: false,
-      token: action.payload.token,
       user: action.payload.user,
       userLocation: action.payload.userLocation,
       jobLocation: action.payload.jobLocation,
@@ -136,10 +136,7 @@ const reducer = (state, action) => {
     return {
       // The default values from appContext.js INSTEAD of ...state
       ...initialState,
-      // These three values override the localStorage data before it updates and returns it to these
-      user: null,
-      userLocation: "",
-      jobLocation: "",
+      userLoading: false,
     };
   }
 
@@ -152,7 +149,6 @@ const reducer = (state, action) => {
     return {
       ...state,
       isLoading: false,
-      token: action.payload.token,
       user: action.payload.user,
       userLocation: action.payload.userLocation,
       jobLocation: action.payload.jobLocation,
@@ -334,6 +330,20 @@ const reducer = (state, action) => {
   // If we click dispatch change page function we fire off this
   if (action.type === CHANGE_PAGE) {
     return { ...state, page: action.payload.page };
+  }
+
+  if (action.type === GET_CURRENT_USER_BEGIN) {
+    return { ...state, userLoading: true, showAlert: false };
+  }
+
+  if (action.type === GET_CURRENT_USER_SUCCESS) {
+    return {
+      ...state,
+      userLoading: false,
+      user: action.payload.user,
+      userLocation: action.payload.location,
+      jobLocation: action.payload.location,
+    };
   }
 
   throw new Error(`No such action : ${action.type}`);

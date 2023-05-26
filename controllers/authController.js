@@ -75,13 +75,17 @@ const login = async (req, res) => {
   // Creates a unique token
   const token = user.createJWT();
 
-  // Removes the password from the response so the Frontend does not get it
-  user.password = undefined;
-
   // Cookie token --> Our function is in the Utils folder
   attachCookies({ res, token });
 
-  res.status(StatusCodes.OK).json({ user, token, location: user.location });
+  // Removes the password from the response so the Frontend does not get it
+  user.password = undefined;
+
+  res.status(StatusCodes.OK).json({
+    user,
+    /* token --> don't need the token anymore */
+    location: user.location,
+  });
 };
 
 const updateUser = async (req, res) => {
@@ -107,9 +111,31 @@ const updateUser = async (req, res) => {
 
   // Create a new token
   const token = user.createJWT();
+  // Cookie token --> Our function is in the Utils folder
+  attachCookies({ res, token });
 
   // Our Response
-  res.status(StatusCodes.OK).json({ user, token, location: user.location });
+  res.status(StatusCodes.OK).json({
+    user,
+    // token, --> Don't need the token anymore
+    location: user.location,
+  });
 };
 
-export { register, login, updateUser };
+// Our cookie way of getting the User
+const getCurrentUser = async (req, res) => {
+  const user = await User.findOne({ _id: req.user.userId });
+  res.status(StatusCodes.OK).json({ user, location: user.location });
+};
+
+// When the User logs out it removes the cookie token too
+const logoutUser = async (req, res) => {
+  res.cookie("token", "logout", {
+    httpOnly: true,
+    // Expires immediately after logging out
+    expires: new Date(Date.now()),
+  });
+  res.status(StatusCodes.OK).json({ msg: "User Logged Out" });
+};
+
+export { register, login, updateUser, getCurrentUser, logoutUser };

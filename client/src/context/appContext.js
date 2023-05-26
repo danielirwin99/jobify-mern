@@ -1,4 +1,4 @@
-import React, { useReducer, useContext } from "react";
+import React, { useReducer, useContext, useEffect } from "react";
 import axios from "axios";
 
 import reducer from "./reducer";
@@ -34,14 +34,18 @@ import {
   SHOW_STATS_SUCCESS,
   CLEAR_FILTERS,
   CHANGE_PAGE,
+  GET_CURRENT_USER_BEGIN,
+  GET_CURRENT_USER_SUCCESS,
 } from "./actions";
 
-const token = localStorage.getItem("token");
-const user = localStorage.getItem("user");
-const userLocation = localStorage.getItem("location");
+// DON'T NEED ANYMORE --> USING COOKIES
+// const token = localStorage.getItem("token");
+// const user = localStorage.getItem("user");
+// const userLocation = localStorage.getItem("location");
 
 // The initial states of each / Default values
 const initialState = {
+  // Runs when the user refreshes the page
   userLoading: true,
   isLoading: false,
   showAlert: false,
@@ -49,16 +53,16 @@ const initialState = {
   alertText: "",
   //   Which alert will show up
   alertType: "",
-  user: user ? JSON.parse(user) : null,
-  token: token,
-  userLocation: userLocation || "",
+  user: null, // --> Changed to null
+  // token: token,
+  userLocation: "",
   showSidebar: false,
   isEditing: false,
   // Our "Add Jobs" page states
   editJobId: "",
   position: "",
   company: "",
-  jobLocation: userLocation || "",
+  jobLocation: "",
   // Dropdown menu
   jobTypeOptions: ["full-time", "part-time", "remote", "internship"],
   // Default Value
@@ -97,15 +101,16 @@ const AppProvider = ({ children }) => {
   });
 
   // Request Axios
-  authFetch.interceptors.request.use(
-    (config) => {
-      config.headers["Authorization"] = `Bearer ${state.token}`;
-      return config;
-    },
-    (error) => {
-      return Promise.reject(error);
-    }
-  );
+  // ----- DON'T NEED ANYMORE --> USING COOKIES -----------
+  // authFetch.interceptors.request.use(
+  //   (config) => {
+  //     config.headers["Authorization"] = `Bearer ${state.token}`;
+  //     return config;
+  //   },
+  //   (error) => {
+  //     return Promise.reject(error);
+  //   }
+  // );
 
   // Response Axios
   authFetch.interceptors.response.use(
@@ -121,19 +126,21 @@ const AppProvider = ({ children }) => {
     }
   );
 
+  // -------- DO NOT NEED HAVE COOKIES NOW ------------
   // Adds the three variables into local storage
-  const addUserToLocalStorage = ({ user, token, location }) => {
-    localStorage.setItem("user", JSON.stringify(user));
-    localStorage.setItem("token", token);
-    localStorage.setItem("location", location);
-  };
+  // const addUserToLocalStorage = ({ user, token, location }) => {
+  //   localStorage.setItem("user", JSON.stringify(user));
+  //   localStorage.setItem("token", token);
+  //   localStorage.setItem("location", location);
+  // };
 
+  // -------- DO NOT NEED HAVE COOKIES NOW ------------
   // Removes the variables from local storage
-  const removeUserFromLocalStorage = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("location");
-  };
+  // const removeUserFromLocalStorage = () => {
+  //   localStorage.removeItem("token");
+  //   localStorage.removeItem("user");
+  //   localStorage.removeItem("location");
+  // };
 
   //   Dispatches the alert function
   const displayAlert = () => {
@@ -160,17 +167,17 @@ const AppProvider = ({ children }) => {
       const response = await axios.post("/api/v1/auth/register", currentUser);
       console.log(response);
       // We want back the three credentials
-      const { user, token, location } = response.data;
+      const { user, location } = response.data;
       // After we got all three --> dispatch that it was successful with the payloads
       dispatch({
         type: REGISTER_USER_SUCCESS,
         payload: {
           user,
-          token,
+
           location,
         },
       });
-      addUserToLocalStorage({ user, token, location });
+      // addUserToLocalStorage({ user, token, location }); // COOKIES NOW
     } catch (error) {
       console.log(error.response);
       dispatch({
@@ -192,18 +199,18 @@ const AppProvider = ({ children }) => {
 
       // console.log(data);
       // We want back the three credentials
-      const { user, token, location } = data;
+      const { user, location } = data;
       // After we got all three --> dispatch that it was successful with the payloads
       dispatch({
         type: LOGIN_USER_SUCCESS,
         payload: {
           user,
-          token,
+
           location,
         },
       });
       // Adds it to the storage to save it on page refresh
-      addUserToLocalStorage({ user, token, location });
+      // addUserToLocalStorage({ user, token, location }); // COOKIES NOW
     } catch (error) {
       dispatch({
         type: LOGIN_USER_ERROR,
@@ -220,9 +227,10 @@ const AppProvider = ({ children }) => {
   };
 
   // Fires this action when they hit logout
-  const logoutUser = () => {
+  const logoutUser = async() => {
+    await authFetch.get("/auth/logout")
     dispatch({ type: LOGOUT_USER });
-    removeUserFromLocalStorage();
+    // removeUserFromLocalStorage(); DON'T NEED ANYMORE
   };
 
   const updateUser = async (currentUser) => {
@@ -233,16 +241,16 @@ const AppProvider = ({ children }) => {
       const { data } = await authFetch.patch("/auth/updateUser", currentUser);
 
       // The three values we want back from the axios fetch above
-      const { user, location, token } = data;
+      const { user, location } = data;
 
       dispatch({
         type: UPDATE_USER_SUCCESS,
         // Add this into our payload
-        payload: { user, location, token },
+        payload: { user, location },
       });
 
       // Adds the data to the local storage for refresh saves
-      addUserToLocalStorage({ user, location, token });
+      // addUserToLocalStorage({ user, location, token }); DON'T NEED ANYMORE
     } catch (error) {
       dispatch({
         type: UPDATE_USER_ERROR,
@@ -379,7 +387,7 @@ const AppProvider = ({ children }) => {
         payload: { msg: error.response.data.msg },
       });
     }
-    clearAlert()
+    clearAlert();
   };
 
   const showStats = async () => {
@@ -412,6 +420,27 @@ const AppProvider = ({ children }) => {
     dispatch({ type: CHANGE_PAGE, payload: { page } });
   };
 
+  const getCurrentUser = async () => {
+    dispatch({ type: GET_CURRENT_USER_BEGIN });
+
+    try {
+      // Fetching the currentUser from the backend
+      const { data } = await authFetch.get("/auth/getCurrentUser");
+
+      // Destructuring the user and location from the data
+      const { user, location } = data;
+      dispatch({ type: GET_CURRENT_USER_SUCCESS, payload: { user, location } });
+    } catch (error) {
+      if (error.response.status === 401) return;
+      // If we somehow pass the error return --> Logout the user
+      logoutUser();
+    }
+  };
+
+  useEffect(() => {
+    getCurrentUser();
+  }, []);
+
   //  Returning our spread out (iteration over all) initialState to the whole application
   //  This lets us use these across the whole project on the frontend
   return (
@@ -421,6 +450,7 @@ const AppProvider = ({ children }) => {
         displayAlert,
         registerUser,
         loginUser,
+        getCurrentUser,
         toggleSidebar,
         logoutUser,
         updateUser,

@@ -1,6 +1,12 @@
 import express from "express";
 const router = express.Router();
-import { register, login, updateUser } from "../controllers/authController.js";
+import {
+  register,
+  login,
+  updateUser,
+  getCurrentUser,
+  logoutUser,
+} from "../controllers/authController.js";
 import authenticateUser from "../middleware/auth.js";
 import testUser from "../middleware/testUser.js";
 // Express Rate Limiter
@@ -20,5 +26,10 @@ router.route("/login").post(apiLimiter, login);
 
 // Route of editing the user info --> Also for restricting a guest user functionality
 router.route("/updateUser").patch(authenticateUser, testUser, updateUser);
+
+// Cookie route to getting the user --> Restricted as well
+router.route("/getCurrentUser").get(authenticateUser, getCurrentUser);
+
+router.route("/logout").get(logoutUser);
 
 export default router;
