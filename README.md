@@ -1,4 +1,4 @@
-# jobify-mern
+# JOBIFY
 Full Stack MERN Project
 
 FullStack Project README
